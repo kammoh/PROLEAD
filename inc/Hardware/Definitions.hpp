@@ -2,7 +2,6 @@
 
 #include <cinttypes>
 #include <vector>
-#include <bits/stdc++.h>
 
 #define Max_Name_Length 10000
 

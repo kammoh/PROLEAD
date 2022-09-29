@@ -522,7 +522,7 @@ unsigned int Hardware::Print::MemoryConsumption(){
         }
         Status.close();
     }else{
-        throw std::logic_error("Status file not found!");
+        ram = -1;
     }
 
     return ram;
@@ -582,7 +582,8 @@ void Hardware::Print::EvaluationResults(Hardware::SettingsStruct& Settings, Hard
     }
 
     TableColumn.at(0) = std::to_string(ElapsedTimePeriod);
-    TableColumn.at(1) = std::to_string(Hardware::Print::MemoryConsumption() / 1e6);
+    int mem = Hardware::Print::MemoryConsumption();
+    TableColumn.at(1) = mem > 0 ? std::to_string(Hardware::Print::MemoryConsumption() / 1e6) + "GB" : "";
 
     if (Settings.CompactDistributions){
         TableColumn.at(2) = std::to_string(Simulation.NumberOfProcessedSimulations);
@@ -594,7 +595,7 @@ void Hardware::Print::EvaluationResults(Hardware::SettingsStruct& Settings, Hard
     std::cout.width(20);
     std::cout << (TableColumn.at(0) + "s |");
     std::cout.width(20);
-    std::cout << (TableColumn.at(1) + "GB |");
+    std::cout << (TableColumn.at(1) + " |");
     std::cout.width(25);
 	std::cout << (TableColumn.at(2) + " |");
     std::cout.width(Space);

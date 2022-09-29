@@ -21,23 +21,24 @@ INC_DIRS = inc
 # Source directories with the .c and .cpp files. Separate multiple directories with a space.
 SRC_DIRS = src
 
-LIB_DIR = lib
-
 # Output directories for release and debug configurations.
 # If both point to the same directory, the final binaries will be suffixed with "_release" and "_debug".
 RELEASE_DIR = release
 DEBUG_DIR = debug
 
-# Compiler options
-C_RELEASE_FLAGS   = -Wall -Wextra -Wshadow -pedantic -fopenmp -O3 -fomit-frame-pointer -std=c11
-C_DEBUG_FLAGS     = -Wall -Wextra -Wshadow -pedantic -fopenmp -g -O2 -fsanitize=address -std=c11
+CPPFLAGS += -Xclang -fopenmp
+LDFLAGS += -lomp
 
-CXX_RELEASE_FLAGS = -Wall -Wextra -Wshadow -pedantic -fopenmp -O3 -fomit-frame-pointer -std=c++17
-CXX_DEBUG_FLAGS   = -Wall -Wextra -Wshadow -pedantic -fopenmp -g -O2 -fsanitize=address -std=c++17
+# Compiler options
+C_RELEASE_FLAGS   = $(CPPFLAGS) $(CFLAGS) -O3 -fomit-frame-pointer -std=c11
+C_DEBUG_FLAGS     = $(CPPFLAGS) $(CFLAGS) -Wall -Wextra -Wshadow -pedantic -g -O2 -fsanitize=address -std=c11
+
+CXX_RELEASE_FLAGS = $(CPPFLAGS) $(CXXFLAGS) -O3 -fomit-frame-pointer -std=c++17
+CXX_DEBUG_FLAGS   = $(CPPFLAGS) $(CXXFLAGS) -Wall -Wextra -Wshadow -pedantic -g -O2 -fsanitize=address -std=c++17
 
 # Linker options. Add libraries you want to link against here.
-RELEASE_LINK_FLAGS = -L$(LIB_DIR) -fopenmp -ldl
-DEBUG_LINK_FLAGS = -L$(LIB_DIR) -fsanitize=address -fopenmp -ldl
+RELEASE_LINK_FLAGS = $(LDFLAGS) -ldl
+DEBUG_LINK_FLAGS   = $(LDFLAGS) -fsanitize=address -ldl
 
 # Output file name
 OUTPUT = PROLEAD
@@ -141,12 +142,12 @@ endif
 
 # create obj directory and compile
 compile: check directories $(OUTPUT_DIRECTORY)/$(OUTPUT)
-ifeq ($(D), 1)
-	@diff=$$(($(shell date +%s%3N) - $(START_TIME))); echo 'Debug build completed in '$$(($$diff / 1000))'.'$$(($$diff % 1000))'s'
-else
-	@diff=$$(($(shell date +%s%3N) - $(START_TIME))); echo 'Release build completed in '$$(($$diff / 1000))'.'$$(($$diff % 1000))'s'
-endif
-	@echo
+# ifeq ($(D), 1)
+# 	@diff=$$(($(shell date +%s%3N) - $(START_TIME))); echo 'Debug build completed in '$$(($$diff / 1000))'.'$$(($$diff % 1000))'s'
+# else
+# 	@diff=$$(($(shell date +%s%3N) - $(START_TIME))); echo 'Release build completed in '$$(($$diff / 1000))'.'$$(($$diff % 1000))'s'
+# endif
+# 	@echo
 
 # create the obj directory
 directories: check
@@ -161,7 +162,7 @@ endif
 $(OUTPUT_DIRECTORY)/$(OUTPUT): $(OBJ_FILES)
 	@echo
 ifeq ($(V), 0)
-	@echo  -e 'LINK\t$(OUTPUT)'
+	@echo "LINK  $(OUTPUT)"
 endif
 	$(SUPPRESS_CMD)$(LINK) -o $(OUTPUT_DIRECTORY)/$(OUTPUT) $(OBJ_FILES) $(LINK_FLAGS) $(PIPE)
 	@echo
@@ -169,7 +170,7 @@ endif
 # compile code files
 $(OUTPUT_DIRECTORY)/$(OBJ_DIR)/%.o: %.c Makefile
 ifeq ($(V), 0)
-	@echo  -e 'CC\t$<'
+	@echo 'CC  $<'
 endif
 	@mkdir -p '$(dir $@)'
 	$(SUPPRESS_CMD)$(CC) -c $< -o $@ $(DEP_FLAGS) $(C_FLAGS) $(foreach dir,$(INC_DIRS),-I $(dir)) $(PIPE)
@@ -177,7 +178,7 @@ endif
 
 $(OUTPUT_DIRECTORY)/$(OBJ_DIR)/%.o: %.cpp Makefile
 ifeq ($(V), 0)
-	@echo  -e 'CXX\t$<'
+	@echo 'CXX  $<'
 endif
 	@mkdir -p '$(dir $@)'
 	$(SUPPRESS_CMD)$(CXX) -c $< -o $@ $(DEP_FLAGS) $(CXX_FLAGS) $(foreach dir,$(INC_DIRS),-I $(dir)) $(PIPE)
