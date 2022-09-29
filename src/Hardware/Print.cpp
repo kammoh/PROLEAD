@@ -388,7 +388,6 @@ void Hardware::Print::CommandLineSettings(CommandLineParameterStruct& CommandLin
     std::cout << "Library name:   " << CommandLineParameters.LibraryName                << std::endl;
     std::cout << "Design file:    " << CommandLineParameters.DesignFileName             << std::endl;
     std::cout << "Module name:    " << CommandLineParameters.MainModuleName             << std::endl;
-    std::cout << "Linker file:    " << CommandLineParameters.LinkerFileName             << std::endl;
     std::cout << "Settings file:  " << CommandLineParameters.SettingsFileName           << std::endl;
     std::cout << "Result folder:  " << CommandLineParameters.EvaluationResultFolderName << std::endl;
     std::cout << std::endl;

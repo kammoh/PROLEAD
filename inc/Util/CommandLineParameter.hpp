@@ -11,5 +11,4 @@ struct CommandLineParameterStruct
     std::string MainModuleName = "circuit"; 
     std::string EvaluationResultFolderName = "res";
     std::string HardwareOrSoftwareCase = "hardware";
-    std::string LinkerFileName = "linker.ld";         
 };

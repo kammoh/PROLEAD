@@ -79,16 +79,6 @@ int main(int argc, char *argv[])
             i += 2;
         }  
         else    
-        if ((CommandLineArguments.at(i) == "-ldf") || (CommandLineArguments.at(i) == "-linkerfile")){
-            CommandLineParameters.LinkerFileName = CommandLineArguments.at(i + 1);
-            std::filesystem::path path(CommandLineParameters.LinkerFileName);  
-
-            if (std::filesystem::is_directory(path, ec)){
-                throw std::runtime_error("Linker file path points to a directory!");
-            }          
-            i += 2;
-        }  
-        else
         {
             Hardware::Print::Help(); 
             return 0;
