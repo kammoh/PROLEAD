@@ -3,7 +3,7 @@
 void Hardware::Print::Help(){
     std::cout << "Usage:" << std::endl;
     std::cout << "./PROLEAD [-lf/-libraryfile  ?] [-ln/-libraryname ?] [-df/-designfile ?]" << std::endl;
-    std::cout << "          [-mn/-modulename   ?] [-cf/-configfile  ?] [-ldf/-linkerfile ?]" << std::endl;
+    std::cout << "          [-mn/-modulename   ?] [-cf/-configfile  ?]" << std::endl;
     std::cout << "          [-rf/-resultfolder ?]\n" << std::endl;
     std::cout << "Options:" << std::endl;
     std::cout << "    -lf/-libraryfile" << std::endl;
@@ -26,9 +26,6 @@ void Hardware::Print::Help(){
     std::cout << "        Sets the specified module name as the standard module name." << std::endl;
     std::cout << "        The module name specifies the name of the topmodule in the netlist." << std::endl;
     std::cout << std::endl;
-    std::cout << "    -ldf/-linkerfile" << std::endl;
-    std::cout << "        Sets the specified linker file as the standard linker file." << std::endl;
-    std::cout << std::endl;   
     std::cout << "    -rf/-resultfolder" << std::endl;
     std::cout << "        Sets the specified result folder as the standard result folder." << std::endl;
     std::cout << "        All reports are stored in the result folder." << std::endl;

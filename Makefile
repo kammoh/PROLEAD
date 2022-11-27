@@ -29,16 +29,30 @@ DEBUG_DIR = debug
 CPPFLAGS += -Xclang -fopenmp
 LDFLAGS += -lomp
 
-# Compiler options
-C_RELEASE_FLAGS   = $(CPPFLAGS) $(CFLAGS) -O3 -fomit-frame-pointer -std=c11
-C_DEBUG_FLAGS     = $(CPPFLAGS) $(CFLAGS) -Wall -Wextra -Wshadow -pedantic -g -O2 -fsanitize=address -std=c11
+CPPFLAGS += -Wno-deprecated-declarations
 
-CXX_RELEASE_FLAGS = $(CPPFLAGS) $(CXXFLAGS) -O3 -fomit-frame-pointer -std=c++17
-CXX_DEBUG_FLAGS   = $(CPPFLAGS) $(CXXFLAGS) -Wall -Wextra -Wshadow -pedantic -g -O2 -fsanitize=address -std=c++17
+CFLAGS += -std=c11
+CXXFLAGS += -std=c++17
+
+OS=$(shell uname -s)
+
+# Compiler options
+C_RELEASE_FLAGS   = $(CPPFLAGS) $(CFLAGS) -O3 -g0 -mtune=native -fomit-frame-pointer -Wno-deprecated-declarations
+C_DEBUG_FLAGS     = $(CPPFLAGS) $(CFLAGS) -Wall -Wextra -Wshadow -pedantic -g -O0 -fsanitize=address
+
+CXX_RELEASE_FLAGS = $(CPPFLAGS) $(CXXFLAGS) -O3 -g0 -mtune=native -fomit-frame-pointer -Wno-deprecated-declarations
+CXX_DEBUG_FLAGS   = $(CPPFLAGS) $(CXXFLAGS) -Wall -Wextra -Wshadow -pedantic -g -O0 -fsanitize=address
 
 # Linker options. Add libraries you want to link against here.
 RELEASE_LINK_FLAGS = $(LDFLAGS) -ldl
 DEBUG_LINK_FLAGS   = $(LDFLAGS) -fsanitize=address -ldl
+
+ifeq ($(OS),Darwin)
+
+else
+	C_RELEASE_FLAGS += -march=native
+	CXX_RELEASE_FLAGS += -march=native
+endif
 
 # Output file name
 OUTPUT = PROLEAD
