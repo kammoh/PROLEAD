@@ -34,9 +34,19 @@ LIB_DIR = lib
 BENCHMARK_DIR = benchmark
 RELEASE_DIR = release
 DEBUG_DIR = debug
+
+OS=$(shell uname -s)
 TEST_DIR = test
 
 EXCLUDED_FILES := test/obj_test/tests/full/aes_rp_d1_ccode/aes_rp_d1_ccode_c.c
+
+CFLAGS += $(CPPFLAGS) -std=c11 $(INCLUDE_PYTHON3)
+CXXFLAGS += $(CPPFLAGS) -std=c++17 $(INCLUDE_PYTHON3)
+
+ifeq ($(OS),Darwin)
+	CFLAGS += -I/opt/homebrew/include
+	CFLAGS += -I/usr/local/include
+endif
 
 
 # Compiler options
@@ -58,12 +68,16 @@ CXX_TEST_FLAGS      = $(CXXFLAGS) -Wextra -Wshadow -pedantic -fopenmp -O3 -g -fn
 
 # Linker options. Add libraries you want to link against here.
 LINK_PYTHON3=`pkg-config --libs python3-embed`
+
 LINK_FLINT = -lflint -lmpfr -lgmp -lm
 LINK_BOOST = -lboost_filesystem -lboost_program_options -lboost_python312
-BENCHMARK_LINK_FLAGS = -L$(LIB_DIR) -fopenmp -ldl $(LINK_PYTHON3) $(LINK_FLINT) $(LINK_BOOST)
-RELEASE_LINK_FLAGS = -L$(LIB_DIR) -fopenmp -ldl $(LINK_PYTHON3)
-DEBUG_LINK_FLAGS = -L$(LIB_DIR) -fsanitize=address -fopenmp -ldl $(LINK_PYTHON3)
-TEST_LINK_FLAGS = -L$(LIB_DIR) -fopenmp -ldl $(LINK_PYTHON3) $(LINK_FLINT) $(LINK_BOOST)
+
+LDFLAGS += $(LINK_PYTHON3) $(LINK_FLINT) $(LINK_BOOST) -L$(LIB_DIR) -fopenmp -ldl
+
+BENCHMARK_LINK_FLAGS = $(LDFLAGS)
+RELEASE_LINK_FLAGS   = $(LDFLAGS)
+DEBUG_LINK_FLAGS     = $(LDFLAGS) -fsanitize=address
+TEST_LINK_FLAGS      = $(LDFLAGS)
 
 # Output file name
 OUTPUT = PROLEAD
