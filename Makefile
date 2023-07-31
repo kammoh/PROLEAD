@@ -21,6 +21,7 @@
 INC_DIRS = inc
 
 # Source directories with the .c and .cpp files. Separate multiple directories with a space.
+SRC_DIRS = src
 BENCHMARK_SRC = "benchmarks src/Software src/Hardware src/Util"
 TEST_SRC = "tests src/Software src/Hardware src/Util"
 DEBUG_SRC = src
@@ -37,25 +38,31 @@ TEST_DIR = test
 
 EXCLUDED_FILES := test/obj_test/tests/full/aes_rp_d1_ccode/aes_rp_d1_ccode_c.c
 
+
 # Compiler options
 INCLUDE_PYTHON3=`pkg-config --cflags python3-embed`
-C_BENCHMARK_FLAGS   = -Wall -Wextra -Wshadow -pedantic -fopenmp -O3 -g -fno-omit-frame-pointer -std=c11 $(INCLUDE_PYTHON3)
-C_RELEASE_FLAGS   = -Wall -Wextra -Wshadow -pedantic -fopenmp -O3 -DNDEBUG -g -fno-omit-frame-pointer -std=c11 $(INCLUDE_PYTHON3)
-C_DEBUG_FLAGS     = -Wall -Wextra -Wshadow -pedantic -fopenmp -g -O2 -fsanitize=address -std=c11 $(INCLUDE_PYTHON3)
-C_TEST_FLAGS     = -Wall -Wextra -Wshadow -pedantic -fopenmp -O3 -g -fno-omit-frame-pointer -std=c11 $(INCLUDE_PYTHON3)
+CPPFLAGS += -I/opt/homebrew/include $(INCLUDE_PYTHON3)
+CPPFLAGS += -Wall
+CFLAGS += $(CPPFLAGS) -std=c11
+CXXFLAGS += $(CPPFLAGS) -std=c++17
 
-CXX_BENCHMARK_FLAGS = -Wall -Wextra -Wshadow -pedantic -fopenmp -O3 -g -fno-omit-frame-pointer -std=c++20 $(INCLUDE_PYTHON3)
-CXX_RELEASE_FLAGS = -Wall -Wextra -Wshadow -pedantic -fopenmp -O3 -DNDEBUG -g -fno-omit-frame-pointer -std=c++20 $(INCLUDE_PYTHON3)
-CXX_DEBUG_FLAGS   = -Wall -Wextra -Wshadow -pedantic -fopenmp -g -O2 -fsanitize=address -std=c++20 $(INCLUDE_PYTHON3)
-CXX_TEST_FLAGS   = -Wall -Wextra -Wshadow -pedantic -fopenmp -O3 -g -fno-omit-frame-pointer -std=c++20 $(INCLUDE_PYTHON3)
+C_BENCHMARK_FLAGS = $(CFLAGS) -Wextra -Wshadow -pedantic -fopenmp -O3 -g -fno-omit-frame-pointer
+C_RELEASE_FLAGS   = $(CFLAGS) -DNDEBUG -Wshadow -fopenmp -O3 -march=native -mtune=native
+C_DEBUG_FLAGS     = $(CFLAGS) -Wextra -Wshadow -pedantic -fopenmp -g -O2 -fsanitize=address
+C_TEST_FLAGS      = $(CFLAGS) -Wextra -Wshadow -pedantic -fopenmp -O3 -g -fno-omit-frame-pointer
+
+CXX_BENCHMARK_FLAGS = $(CXXFLAGS) -Wextra -Wshadow -pedantic -fopenmp -O3 -g -fno-omit-frame-pointer
+CXX_RELEASE_FLAGS   = $(CXXFLAGS) -Wshadow -fopenmp -O3 -march=native -mtune=native
+CXX_DEBUG_FLAGS     = $(CXXFLAGS) -Wextra -Wshadow -pedantic -fopenmp -g -O2 -fsanitize=address
+CXX_TEST_FLAGS      = $(CXXFLAGS) -Wextra -Wshadow -pedantic -fopenmp -O3 -g -fno-omit-frame-pointer
 
 # Linker options. Add libraries you want to link against here.
 LINK_PYTHON3=`pkg-config --libs python3-embed`
 LINK_FLINT = -lflint -lmpfr -lgmp -lm
 LINK_BOOST = -lboost_filesystem -lboost_program_options -lboost_python312
 BENCHMARK_LINK_FLAGS = -L$(LIB_DIR) -fopenmp -ldl $(LINK_PYTHON3) $(LINK_FLINT) $(LINK_BOOST)
-RELEASE_LINK_FLAGS = -L$(LIB_DIR) -fopenmp -ldl $(LINK_PYTHON3) $(LINK_FLINT) $(LINK_BOOST)
-DEBUG_LINK_FLAGS = -L$(LIB_DIR) -fsanitize=address -fopenmp -ldl $(LINK_PYTHON3) $(LINK_FLINT) $(LINK_BOOST)
+RELEASE_LINK_FLAGS = -L$(LIB_DIR) -fopenmp -ldl $(LINK_PYTHON3)
+DEBUG_LINK_FLAGS = -L$(LIB_DIR) -fsanitize=address -fopenmp -ldl $(LINK_PYTHON3)
 TEST_LINK_FLAGS = -L$(LIB_DIR) -fopenmp -ldl $(LINK_PYTHON3) $(LINK_FLINT) $(LINK_BOOST)
 
 # Output file name
