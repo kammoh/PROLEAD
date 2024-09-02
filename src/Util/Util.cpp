@@ -448,6 +448,8 @@ uint64_t Util::PrintMemoryConsumption() {
   } else {
     throw std::logic_error("Status file not found!");
   }
+
+  return ram;
 #elif defined(__APPLE__)
   kern_return_t ret;
   mach_task_basic_info_data_t info;
