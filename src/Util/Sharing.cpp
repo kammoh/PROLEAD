@@ -263,7 +263,7 @@ std::vector<Polynomial> Sharing::Encode(fq_t& polynomial_fq,
                                         bool is_additive_masking) {
   std::vector<Polynomial> shared_polynomial(number_of_shares,
                                             Polynomial(extension_degree_));
-  std::vector<fq_t> shared_polynomial_fq(number_of_shares);
+  fq_t shared_polynomial_fq[number_of_shares];
 
   for (fq_t& share_fq : shared_polynomial_fq) {
     fq_init(share_fq, ctx_fq_);

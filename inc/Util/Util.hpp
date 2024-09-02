@@ -23,6 +23,10 @@
 #include "boost/generator_iterator.hpp"
 #include "boost/random.hpp"
 
+#ifdef __APPLE__
+#include <mach/mach.h>
+#endif
+
 /**
  * @brief Represents an observation set made by a set of probes.
  *
