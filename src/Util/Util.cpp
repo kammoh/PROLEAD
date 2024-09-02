@@ -431,6 +431,7 @@ void ExtractCombinationFromBitmask(std::vector<uint64_t>& combination,
 }
 
 uint64_t Util::PrintMemoryConsumption() {
+#if defined(__linux__) || defined(__LINUX__)
   std::ifstream status("/proc/self/status");
   std::string line, number;
   uint64_t ram = 0;
@@ -447,8 +448,21 @@ uint64_t Util::PrintMemoryConsumption() {
   } else {
     throw std::logic_error("Status file not found!");
   }
+#elif defined(__APPLE__)
+  kern_return_t ret;
+  mach_task_basic_info_data_t info;
+  mach_msg_type_number_t count = MACH_TASK_BASIC_INFO_COUNT;
 
-  return ram;
+  ret = task_info(mach_task_self(), MACH_TASK_BASIC_INFO, (task_info_t)&info, &count);
+  if (ret != KERN_SUCCESS || count != MACH_TASK_BASIC_INFO_COUNT)
+  {
+    fprintf(stderr, "task_info failed: %d\n", ret);
+    return 0;
+  }
+  return info.resident_size_max / 1024; // /proc/self/status is in kB
+#else
+  return 0;
+#endif
 }
 
 void Util::PrintHorizontalLine(unsigned int width) {

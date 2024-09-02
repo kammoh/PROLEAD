@@ -4,17 +4,19 @@
  */
 #pragma once
 
+
+// #include <cstdint>
+#include <iostream>
+#include <random>
+#include <vector>
+
+#include <boost/dynamic_bitset.hpp>
+#include <boost/random.hpp>
+
 #include <flint/fmpz.h>
 #include <flint/fmpz_mod.h>
 #include <flint/fmpz_mod_poly.h>
 #include <flint/fq.h>
-
-#include <boost/dynamic_bitset.hpp>
-#include <boost/random.hpp>
-#include <cstdint>
-#include <iostream>
-#include <random>
-#include <vector>
 
 /**
  * @brief We represent elements in GF(n^k) (polynomials) as a vector of
