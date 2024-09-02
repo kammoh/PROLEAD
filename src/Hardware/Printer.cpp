@@ -337,7 +337,7 @@ void Printer<ExtensionContainer>::PrintMostLeakingSets(
          << std::endl;
   size_t index, set_index;
   size_t number_of_probing_sets = probing_sets.size();
-  size_t bound = std::min(number_of_probing_sets, settings.GetNumberOfEntriesInReport());
+  size_t bound = std::min(number_of_probing_sets, (size_t) settings.GetNumberOfEntriesInReport());
   std::vector<bool> set_unconsidered(number_of_probing_sets, true);
   double p_value;
 

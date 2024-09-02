@@ -871,6 +871,7 @@ bool Software::Probing::InDistance(Software::SettingsStruct& Settings, std::vect
 // **************************************************************************************************************************
 
 uint32_t Software::Probing::MemoryConsumption(){
+#if defined(__linux__) || defined(__LINUX__)
     std::ifstream Status("/proc/self/status");
     std::string Line, Number;
     uint32_t ram = 0;
@@ -889,4 +890,19 @@ uint32_t Software::Probing::MemoryConsumption(){
     }
 
     return ram;
+#elif defined(__APPLE__)
+  kern_return_t ret;
+  mach_task_basic_info_data_t info;
+  mach_msg_type_number_t count = MACH_TASK_BASIC_INFO_COUNT;
+
+  ret = task_info(mach_task_self(), MACH_TASK_BASIC_INFO, (task_info_t)&info, &count);
+  if (ret != KERN_SUCCESS || count != MACH_TASK_BASIC_INFO_COUNT)
+  {
+    fprintf(stderr, "task_info failed: %d\n", ret);
+    return 0;
+  }
+  return info.resident_size_max / 1024; // /proc/self/status is in kB
+#else
+  return 0;
+#endif
 }

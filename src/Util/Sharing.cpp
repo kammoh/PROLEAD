@@ -218,7 +218,7 @@ std::vector<Polynomial> Sharing::Encode(Polynomial& polynomial,
   fq_init(polynomial_fq, ctx_fq_);
   ConvertPolynomialToFq(polynomial, polynomial_fq);
   std::vector<Polynomial> shared_polynomial(number_of_shares);
-  std::vector<fq_t> shared_polynomial_fq(number_of_shares);
+  fq_t shared_polynomial_fq[number_of_shares];
 
   for (fq_t& share_fq : shared_polynomial_fq) {
     fq_init(share_fq, ctx_fq_);
