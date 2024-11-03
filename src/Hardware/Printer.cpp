@@ -212,7 +212,7 @@ void Printer<ExtensionContainer>::PrintEvaluationHeader() {
   unsigned int table_size = column_size_ + 89;
   std::vector<std::string> table_header = {
       "Elapsed Time",
-      "Required Ram",
+      "Required RAM",
       "Processed Simulations",
       "Probing Set with highest Information Leakage",
       "-log10(p)",
@@ -368,7 +368,7 @@ void Printer<ExtensionContainer>::PrintReport(
     const CircuitStruct& circuit, const Settings& settings,
     Simulation& simulation, unsigned int probe_step_index) {
   std::string file_name;
-  unsigned int number_of_simulations = simulation.number_of_processed_simulations;
+  uint64_t number_of_simulations = simulation.number_of_processed_simulations;
 
   if (settings.GetNumberOfProbingSetsPerStep() == UINT_MAX) {
     file_name = path_ + "/" + report_prefix_ +
