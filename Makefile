@@ -60,7 +60,7 @@ CPPFLAGS += $(INCLUDE_PYTHON3) $(INCLUDE_FLINT)
 # CPPFLAGS += -Wall
 
 CFLAGS   += $(CPPFLAGS) -std=c11
-CXXFLAGS += $(CPPFLAGS) -std=c++20
+CXXFLAGS += $(CPPFLAGS) -std=c++17
 
 
 C_BENCHMARK_FLAGS = $(CFLAGS) -Wall -Wextra -Wshadow -pedantic -O3 -g -fno-omit-frame-pointer
