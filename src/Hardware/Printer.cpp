@@ -243,7 +243,7 @@ void Printer<ExtensionContainer>::PrintEvaluationHeader() {
   unsigned int table_size = column_size_ + 89;
   std::vector<std::string> table_header = {
       "Elapsed Time",
-      "Required Ram",
+      "Required RAM",
       "Processed Simulations",
       "Probing Set with highest Information Leakage",
       "-log10(p)",
