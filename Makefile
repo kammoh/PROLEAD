@@ -33,34 +33,37 @@ RELEASE_SRC = src
 BENCHMARK_DIR = benchmark
 RELEASE_DIR = release
 DEBUG_DIR = debug
-
-OS=$(shell uname -s)
 TEST_DIR = test
 
 EXCLUDED_FILES := test/obj_test/tests/full/aes_rp_d1_ccode/aes_rp_d1_ccode_c.c
 
+# Compiler options
+INCLUDE_PYTHON3 ?= $(shell pkg-config --cflags python3-embed)
+INCLUDE_FLINT ?= $(shell pkg-config --cflags flint)
+INCLUDE_CATCH2 ?= $(shell pkg-config --cflags catch2-with-main)
+CPPFLAGS += $(INCLUDE_PYTHON3) $(INCLUDE_FLINT)
+
+CPPFLAGS += -Wall -Wextra -Wshadow
+
+OS=$(shell uname -s)
+
 ifeq ($(OS),Darwin)
 	CPPFLAGS += -I$(HOMEBREW_PREFIX)/include
+	CPPFLAGS += -I$(HOMEBREW_PREFIX)/opt/libomp/include
 	LDFLAGS  += -L${HOMEBREW_PREFIX}/lib
+	LDFLAGS  += -L${HOMEBREW_PREFIX}/opt/libomp/lib
 	LDFLAGS  += -lomp
 	CPPFLAGS += -Xclang -fopenmp
 else
 	CPPFLAGS += -fopenmp
 	CPPFLAGS += -ldl
-	CPPFLAGS += -I/usr/local/include
-	LDFLAGS  += -L/usr/local/lib
 endif
 
-
-# Compiler options
-INCLUDE_PYTHON3 ?= $(shell pkg-config --cflags python3-embed)
-INCLUDE_FLINT ?= $(shell pkg-config --cflags flint)
-CPPFLAGS += $(INCLUDE_PYTHON3) $(INCLUDE_FLINT)
-
-# CPPFLAGS += -Wall
+CPPFLAGS += -I/usr/local/include
+LDFLAGS  += -L/usr/local/lib
 
 CFLAGS   += $(CPPFLAGS) -std=c11
-CXXFLAGS += $(CPPFLAGS) -std=c++17
+CXXFLAGS += $(CPPFLAGS) -std=c++20
 
 
 C_BENCHMARK_FLAGS = $(CFLAGS) -Wall -Wextra -Wshadow -pedantic -O3 -g -fno-omit-frame-pointer
@@ -68,16 +71,16 @@ C_RELEASE_FLAGS   = $(CFLAGS) -DNDEBUG -Wno-deprecated-declarations -O3 -march=n
 C_DEBUG_FLAGS     = $(CFLAGS) -Wall -Wextra -Wshadow -pedantic -g -O2 -fsanitize=address
 C_TEST_FLAGS      = $(CFLAGS) -Wall -Wextra -Wshadow -pedantic -O3 -g -fno-omit-frame-pointer
 
-CXX_BENCHMARK_FLAGS = $(CXXFLAGS) -Wextra -Wshadow -pedantic -fopenmp -O3 -g -fno-omit-frame-pointer
-CXX_RELEASE_FLAGS   = $(CXXFLAGS) -Wshadow -fopenmp -O3 -march=native -mtune=native
-CXX_DEBUG_FLAGS     = $(CXXFLAGS) -Wextra -Wshadow -pedantic -fopenmp -g -O2 -fsanitize=address
-CXX_TEST_FLAGS      = $(CXXFLAGS) -Wextra -Wshadow -pedantic -fopenmp -O3 -g -fno-omit-frame-pointer
+CXX_BENCHMARK_FLAGS = $(CXXFLAGS) -pedantic -O3 -g -fno-omit-frame-pointer
+CXX_RELEASE_FLAGS   = $(CXXFLAGS) -O3 -march=native -mtune=native
+CXX_DEBUG_FLAGS     = $(CXXFLAGS) -pedantic -g -O2 -fsanitize=address
+CXX_TEST_FLAGS      = $(CXXFLAGS) $(INCLUDE_CATCH2) -pedantic -O3 -g -fno-omit-frame-pointer
 
 # Linker options. Add libraries you want to link against here.
 LINK_PYTHON3 ?= $(shell pkg-config --libs python3-embed)
 LINK_FLINT   ?= $(shell pkg-config --libs flint)
-# LINK_BOOST ?= -lboost_filesystem -lboost_program_options -lboost_python312
-LINK_BOOST ?= -lboost_filesystem -lboost_program_options
+LINK_CATCH2  ?= $(shell pkg-config --libs catch2-with-main)
+LINK_BOOST   ?= -lboost_filesystem -lboost_program_options
 
 
 LDFLAGS += $(LINK_PYTHON3) $(LINK_FLINT) $(LINK_BOOST)
@@ -85,7 +88,7 @@ LDFLAGS += $(LINK_PYTHON3) $(LINK_FLINT) $(LINK_BOOST)
 BENCHMARK_LINK_FLAGS = $(LDFLAGS)
 RELEASE_LINK_FLAGS   = $(LDFLAGS)
 DEBUG_LINK_FLAGS     = $(LDFLAGS) -fsanitize=address
-TEST_LINK_FLAGS      = $(LDFLAGS)
+TEST_LINK_FLAGS      = $(LDFLAGS) $(LINK_CATCH2)
 
 # Output file name
 OUTPUT = PROLEAD
@@ -236,23 +239,23 @@ endif
 $(OUTPUT_DIRECTORY)/$(OUTPUT): $(OBJ_FILES)
 	@echo
 ifeq ($(V), 0)
-	@echo 'LINK\t$(OUTPUT)'
+	@echo "LINK\t$(OUTPUT)"
 endif
 	$(SUPPRESS_CMD)$(LINK) -o $(OUTPUT_DIRECTORY)/$(OUTPUT) $(OBJ_FILES) $(LINK_FLAGS) $(PIPE)
 	@echo
 
 # compile code files
-$(OUTPUT_DIRECTORY)/$(OBJ_DIR)/%.o: %.c Makefile
+$(OUTPUT_DIRECTORY)/$(OBJ_DIR)/%.o: %.c
 ifeq ($(V), 0)
-	@echo  'CC\t$<'
+	@echo  "CC\t$<"
 endif
 	@mkdir -p '$(dir $@)'
 	$(SUPPRESS_CMD)$(CC) -c $< -o $@ $(DEP_FLAGS) $(C_FLAGS) $(foreach dir,$(INC_DIRS),-I $(dir)) $(PIPE)
 	@touch $@
 
-$(OUTPUT_DIRECTORY)/$(OBJ_DIR)/%.o: %.cpp Makefile
+$(OUTPUT_DIRECTORY)/$(OBJ_DIR)/%.o: %.cpp
 ifeq ($(V), 0)
-	@echo 'CXX\t$<'
+	@echo "CXX\t$<"
 endif
 	@mkdir -p '$(dir $@)'
 	$(SUPPRESS_CMD)$(CXX) -c $< -o $@ $(DEP_FLAGS) $(CXX_FLAGS) $(foreach dir,$(INC_DIRS),-I $(dir)) $(PIPE)

@@ -30,7 +30,7 @@ double Software::Analyze::ProbingSecurity(Software::SettingsStruct& Settings,  s
     std::tuple<int, int, uint32_t> LargestContingencyTableProbingSet = std::make_tuple(0,0,0); //(thread, probing set, contingency table size)
     std::tuple<int, int> MaximumProbingSet;
     std::tuple<int, int> MinimumProbingSet;
-    std::vector<ProbingSetStruct>::iterator MaximumIterator;
+    // std::vector<ProbingSetStruct>::iterator MaximumIterator;
     std::vector<boost::mt19937> ThreadRng(Settings.Max_no_of_Threads + 1);
     std::vector<::Software::TestStruct> GlobalTests(Settings.Max_no_of_Threads);    
     std::vector<std::vector<uint32_t>> ProbeInfoToStandardProbe;

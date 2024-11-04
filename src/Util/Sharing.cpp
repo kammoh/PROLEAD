@@ -238,12 +238,12 @@ std::vector<uint64_t> Sharing::DecodeBitsliced(
   return bitsliced_poly;
 }
 
-void Sharing::ConvertFqToPolynomial(fq_t& polynomial_fq,
+void Sharing::ConvertFqToPolynomial(fmpz_poly_struct& polynomial_fq,
                                     Polynomial& polynomial) {
   fmpz_t fmpz_coef;
   fmpz_init(fmpz_coef);
   fmpz_mod_poly_zero(fmpz_poly_, ctx_fmpz_mod_);
-  fq_get_fmpz_mod_poly(fmpz_poly_, polynomial_fq, ctx_fq_);
+  fq_get_fmpz_mod_poly(fmpz_poly_, &polynomial_fq, ctx_fq_);
 
   for (uint64_t index = 0; index < extension_degree_; ++index) {
     fmpz_mod_poly_get_coeff_fmpz(fmpz_coef, fmpz_poly_, index, ctx_fmpz_mod_);
@@ -296,8 +296,8 @@ std::vector<uint64_t> Sharing::SampleRandomBitslicedPolynomial() {
   Polynomial polynomial(extension_degree_);
 
   for (index = 0; index < 64; ++index) {
-    fq_t polynomial_fq;
-    fq_init(polynomial_fq, ctx_fq_);
+    fmpz_poly_struct polynomial_fq;
+    fq_init(&polynomial_fq, ctx_fq_);
     SampleRandomPolynomial(polynomial_fq);
     ConvertFqToPolynomial(polynomial_fq, polynomial);
     bitset = ConvertPolynomialToBitset(polynomial);
@@ -307,7 +307,7 @@ std::vector<uint64_t> Sharing::SampleRandomBitslicedPolynomial() {
       bitsliced_polynomial[bit_index] |= bitset[bit_index];
     }
 
-    fq_clear(polynomial_fq, ctx_fq_);
+    fq_clear(&polynomial_fq, ctx_fq_);
   }
 
   return bitsliced_polynomial;

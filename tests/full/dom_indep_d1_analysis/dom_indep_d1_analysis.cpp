@@ -1,4 +1,4 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "Util/ProgramOptions.hpp"
 #include "Hardware/Adversaries.hpp"

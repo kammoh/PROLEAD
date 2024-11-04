@@ -1,6 +1,7 @@
-#include "Util/Util.hpp"
+#include <random>
+#include <catch2/catch_all.hpp>
 
-#include <catch2/catch.hpp>
+#include "Util/Util.hpp"
 
 TEST_CASE("Test sorting and merging of duplicates",
           "[SortAndMergeDuplicates]") {
