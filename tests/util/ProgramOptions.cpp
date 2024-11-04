@@ -1,6 +1,6 @@
 #include "Util/ProgramOptions.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 TEST_CASE("Test ProgramOptions Parse function", "[ProgramOptions]") {
   SECTION("No command line options given.") {

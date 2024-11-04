@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 #include "Util/Util.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 TEST_CASE("Benchmark sorting and merging of duplicates",
           "[Benchmark][SortAndMergeDuplicates]") {

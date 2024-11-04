@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 #include "Util/Sharing.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 TEST_CASE("Benchmark the Boolean secret sharing",
           "[Benchmark][BooleanSecretSharing]") {

@@ -149,17 +149,17 @@ class Sharing {
 
  private:
   /**
-   * @brief Converts an fq_t polynomial to a polynomial represented as
+   * @brief Converts an fmpz_poly_struct polynomial to a polynomial represented as
    * coefficient vector.
-   * @param polynomial_fq The polynomial represented as an fq_t.
+   * @param polynomial_fq The polynomial represented as an fmpz_poly_struct.
    * @param polynomial_fq The converted polynomial stored as coefficient vector.
    */
-  void ConvertFqToPolynomial(fq_t& polynomial_fq, Polynomial& polynomial);
+  void ConvertFqToPolynomial(fmpz_poly_struct& polynomial_fq, Polynomial& polynomial);
 
   boost::dynamic_bitset<> ConvertPolynomialToBitset(
       const Polynomial& polynomial) const;
 
-  void SampleRandomPolynomial(fq_t& random_polynomial_fq);
+  void SampleRandomPolynomial(fmpz_poly_struct& random_polynomial_fq);
 
   /**
    * @brief Checks if a given polynomial is within the specified finite field.
