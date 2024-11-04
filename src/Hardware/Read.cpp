@@ -1110,9 +1110,9 @@ void Hardware::Read::DesignFile(const std::string& design_file_name, const std::
                                 for (j = Index1; ((IndexUpwards == 1) && (j <= Index2)) || ((IndexUpwards == -1) && (j >= Index2)); j += IndexUpwards)
                                 {
                                     if (Index1 != -1)
-                                        sprintf(Str2, "%s[%d]", Str1, j);
+                                        snprintf(Str2, Max_Name_Length * sizeof(char), "%s[%d]", Str1, j);
                                     else
-                                        sprintf(Str2, "%s", Str1);
+                                        snprintf(Str2, Max_Name_Length * sizeof(char), "%s", Str1);
 
 									SignalIndex = Hardware::Read::SearchSignalName(Circuit, Str2, 0, settings);
 

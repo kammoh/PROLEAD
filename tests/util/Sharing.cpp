@@ -1,6 +1,6 @@
 #include "Util/Sharing.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "Util/Util.hpp"
 #include "boost/generator_iterator.hpp"

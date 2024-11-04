@@ -23,8 +23,8 @@ FaultManager::FaultManager(
       circuit_to_be_faulted_(circuit_to_be_faulted) {}
 
 void FaultManager::AddStuckAtZeroFault(
-    const Hardware::SignalStruct *const signal, size_t signal_index,
-    size_t clock_cycle, double fault_probability) {
+    const Hardware::SignalStruct *const signal, uint64_t signal_index,
+    uint64_t clock_cycle, double fault_probability) {
 
   auto fault = std::make_unique<StuckAtZeroFault>(
       signal, signal_index, clock_cycle, fault_probability);
@@ -33,8 +33,8 @@ void FaultManager::AddStuckAtZeroFault(
 }
 
 void FaultManager::AddStuckAtOneFault(
-    const Hardware::SignalStruct *const signal, size_t signal_index,
-    size_t clock_cycle, double fault_probability) {
+    const Hardware::SignalStruct *const signal, uint64_t signal_index,
+    uint64_t clock_cycle, double fault_probability) {
 
   auto fault = std::make_unique<StuckAtOneFault>(
       signal, signal_index, clock_cycle, fault_probability);
@@ -43,7 +43,7 @@ void FaultManager::AddStuckAtOneFault(
 }
 
 void FaultManager::AddToggleFault(const Hardware::SignalStruct *const signal,
-                                  size_t signal_index, size_t clock_cycle,
+                                  uint64_t signal_index, uint64_t clock_cycle,
                                   double fault_probability) {
 
   auto fault = std::make_unique<ToggleFault>(signal, signal_index, clock_cycle,

@@ -53,8 +53,8 @@ std::vector<std::vector<uint64_t>> Sharing::EncodeBitsliced(
   fmpz_t coefficient_fmpz;
   fmpz_init(coefficient_fmpz);
 
-  fq_t polynomial_fq;
-  fq_init(polynomial_fq, ctx_fq_);
+  fmpz_poly_struct polynomial_fq;
+  fq_init(&polynomial_fq, ctx_fq_);
 
   for (simulation_index = 0; simulation_index < 64; ++simulation_index) {
     fmpz_mod_poly_zero(fmpz_poly_, ctx_fmpz_mod_);
@@ -82,7 +82,7 @@ std::vector<std::vector<uint64_t>> Sharing::EncodeBitsliced(
                                    coefficient_fmpz, ctx_fmpz_mod_);
     }
 
-    fq_set_fmpz_mod_poly(polynomial_fq, fmpz_poly_, ctx_fq_);
+    fq_set_fmpz_mod_poly(&polynomial_fq, fmpz_poly_, ctx_fq_);
 
     shared_polynomial =
         Encode(polynomial_fq, number_of_shares, is_additive_masking);
@@ -109,7 +109,7 @@ std::vector<std::vector<uint64_t>> Sharing::EncodeBitsliced(
     }
   }
 
-  fq_clear(polynomial_fq, ctx_fq_);
+  fq_clear(&polynomial_fq, ctx_fq_);
   fmpz_clear(coefficient_fmpz);
   return bitsliced_shared_polynomial;
 }
@@ -119,7 +119,7 @@ std::vector<uint64_t> Sharing::DecodeBitsliced(
     bool is_additive_masking) {
   uint64_t number_of_shares = bitsliced_shared_polynomial.size();
   std::vector<uint64_t> bitsliced_polynomial(length_of_elements_in_bits_, 0);
-  std::vector<fq_t> shared_polynomial_fq(number_of_shares);
+  std::vector<fmpz_poly_struct> shared_polynomial_fq(number_of_shares);
   uint64_t bit_index, coefficient_index, share_index, simulation_index, index;
   Polynomial polynomial;
 
@@ -127,8 +127,8 @@ std::vector<uint64_t> Sharing::DecodeBitsliced(
   fmpz_t coefficient_fmpz;
   fmpz_init(coefficient_fmpz);
 
-  for (fq_t& polynomial_fq : shared_polynomial_fq) {
-    fq_init(polynomial_fq, ctx_fq_);
+  for (fmpz_poly_struct& polynomial_fq : shared_polynomial_fq) {
+    fq_init(&polynomial_fq, ctx_fq_);
   }
 
   for (simulation_index = 0; simulation_index < 64; ++simulation_index) {
@@ -153,7 +153,7 @@ std::vector<uint64_t> Sharing::DecodeBitsliced(
                                      coefficient_fmpz, ctx_fmpz_mod_);
       }
 
-      fq_set_fmpz_mod_poly(shared_polynomial_fq[share_index], fmpz_poly_,
+      fq_set_fmpz_mod_poly(&shared_polynomial_fq[share_index], fmpz_poly_,
                            ctx_fq_);
     }
 
@@ -170,20 +170,20 @@ std::vector<uint64_t> Sharing::DecodeBitsliced(
     }
   }
 
-  for (fq_t& polynomial_fq : shared_polynomial_fq) {
-    fq_clear(polynomial_fq, ctx_fq_);
+  for (fmpz_poly_struct& polynomial_fq : shared_polynomial_fq) {
+    fq_clear(&polynomial_fq, ctx_fq_);
   }
 
   fmpz_clear(coefficient_fmpz);
   return bitsliced_polynomial;
 }
 
-void Sharing::ConvertFqToPolynomial(fq_t& polynomial_fq,
+void Sharing::ConvertFqToPolynomial(fmpz_poly_struct& polynomial_fq,
                                     Polynomial& polynomial) {
   fmpz_t fmpz_coef;
   fmpz_init(fmpz_coef);
   fmpz_mod_poly_zero(fmpz_poly_, ctx_fmpz_mod_);
-  fq_get_fmpz_mod_poly(fmpz_poly_, polynomial_fq, ctx_fq_);
+  fq_get_fmpz_mod_poly(fmpz_poly_, &polynomial_fq, ctx_fq_);
 
   for (uint64_t index = 0; index < extension_degree_; ++index) {
     fmpz_mod_poly_get_coeff_fmpz(fmpz_coef, fmpz_poly_, index, ctx_fmpz_mod_);
@@ -211,7 +211,7 @@ boost::dynamic_bitset<> Sharing::ConvertPolynomialToBitset(
 }
 
 
-void Sharing::SampleRandomPolynomial(fq_t& random_polynomial_fq) {
+void Sharing::SampleRandomPolynomial(fmpz_poly_struct& random_polynomial_fq) {
   fmpz_mod_poly_t random_fmpz;
   fmpz_mod_poly_init(random_fmpz, ctx_fmpz_mod_);
 
@@ -224,7 +224,7 @@ void Sharing::SampleRandomPolynomial(fq_t& random_polynomial_fq) {
                                  ctx_fmpz_mod_);
   }
 
-  fq_set_fmpz_mod_poly(random_polynomial_fq, random_fmpz, ctx_fq_);
+  fq_set_fmpz_mod_poly(&random_polynomial_fq, random_fmpz, ctx_fq_);
   fmpz_mod_poly_clear(random_fmpz, ctx_fmpz_mod_);
   fmpz_clear(coefficient);
 }
@@ -236,8 +236,8 @@ std::vector<uint64_t> Sharing::SampleRandomBitslicedPolynomial() {
   Polynomial polynomial(extension_degree_);
 
   for (index = 0; index < 64; ++index) {
-    fq_t polynomial_fq;
-    fq_init(polynomial_fq, ctx_fq_);
+    fmpz_poly_struct polynomial_fq;
+    fq_init(&polynomial_fq, ctx_fq_);
     SampleRandomPolynomial(polynomial_fq);
     ConvertFqToPolynomial(polynomial_fq, polynomial);
     bitset = ConvertPolynomialToBitset(polynomial);
@@ -247,7 +247,7 @@ std::vector<uint64_t> Sharing::SampleRandomBitslicedPolynomial() {
       bitsliced_polynomial[bit_index] |= bitset[bit_index];
     }
 
-    fq_clear(polynomial_fq, ctx_fq_);
+    fq_clear(&polynomial_fq, ctx_fq_);
   }
 
   return bitsliced_polynomial;
@@ -258,42 +258,42 @@ std::vector<uint64_t> Sharing::SampleBooleanRandomBitslicedPolynomial() {
   return bitsliced_polynomial;
 }
 
-std::vector<Polynomial> Sharing::Encode(fq_t& polynomial_fq,
+std::vector<Polynomial> Sharing::Encode(fmpz_poly_struct& polynomial_fq,
                                         uint64_t number_of_shares,
                                         bool is_additive_masking) {
   std::vector<Polynomial> shared_polynomial(number_of_shares,
                                             Polynomial(extension_degree_));
-  fq_t shared_polynomial_fq[number_of_shares];
+  std::vector<fmpz_poly_struct> shared_polynomial_fq(number_of_shares);
 
-  for (fq_t& share_fq : shared_polynomial_fq) {
-    fq_init(share_fq, ctx_fq_);
+  for (fmpz_poly_struct& share_fq : shared_polynomial_fq) {
+    fq_init(&share_fq, ctx_fq_);
   }
 
   if (is_additive_masking) {
-    fq_add(shared_polynomial_fq[0], shared_polynomial_fq[0], polynomial_fq,
+    fq_add(&shared_polynomial_fq[0], &shared_polynomial_fq[0], &polynomial_fq,
            ctx_fq_);
 
     for (uint64_t index = 1; index < number_of_shares; ++index) {
       SampleRandomPolynomial(shared_polynomial_fq[index]);
-      fq_sub(shared_polynomial_fq[0], shared_polynomial_fq[0],
-             shared_polynomial_fq[index], ctx_fq_);
+      fq_sub(&shared_polynomial_fq[0], &shared_polynomial_fq[0],
+             &shared_polynomial_fq[index], ctx_fq_);
     }
   } else {
-    fq_one(shared_polynomial_fq[0], ctx_fq_);
-    fq_mul(shared_polynomial_fq[0], shared_polynomial_fq[0], polynomial_fq,
+    fq_one(&shared_polynomial_fq[0], ctx_fq_);
+    fq_mul(&shared_polynomial_fq[0],&shared_polynomial_fq[0], &polynomial_fq,
            ctx_fq_);
 
     for (uint64_t index = 1; index < number_of_shares; ++index) {
       do {
         SampleRandomPolynomial(shared_polynomial_fq[index]);
-      } while (fq_is_zero(shared_polynomial_fq[index], ctx_fq_));
+      } while (fq_is_zero(&shared_polynomial_fq[index], ctx_fq_));
 
-      fq_t inverse_fq;
-      fq_init(inverse_fq, ctx_fq_);
-      fq_inv(inverse_fq, shared_polynomial_fq[index], ctx_fq_);
-      fq_mul(shared_polynomial_fq[0], shared_polynomial_fq[0], inverse_fq,
+      fmpz_poly_struct inverse_fq;
+      fq_init(&inverse_fq, ctx_fq_);
+      fq_inv(&inverse_fq, &shared_polynomial_fq[index], ctx_fq_);
+      fq_mul(&shared_polynomial_fq[0], &shared_polynomial_fq[0], &inverse_fq,
              ctx_fq_);
-      fq_clear(inverse_fq, ctx_fq_);
+      fq_clear(&inverse_fq, ctx_fq_);
     }
   }
 
@@ -302,32 +302,32 @@ std::vector<Polynomial> Sharing::Encode(fq_t& polynomial_fq,
                           shared_polynomial[index]);
   }
 
-  for (fq_t& share_fq : shared_polynomial_fq) {
-    fq_clear(share_fq, ctx_fq_);
+  for (fmpz_poly_struct& share_fq : shared_polynomial_fq) {
+    fq_clear(&share_fq, ctx_fq_);
   }
 
   return shared_polynomial;
 }
 
-Polynomial Sharing::Decode(std::vector<fq_t>& shared_polynomial_fq,
+Polynomial Sharing::Decode(std::vector<fmpz_poly_struct>& shared_polynomial_fq,
                            bool is_additive_masking) {
   Polynomial polynomial(extension_degree_);
-  fq_t polynomial_fq;
-  fq_init(polynomial_fq, ctx_fq_);
+  fmpz_poly_struct polynomial_fq;
+  fq_init(&polynomial_fq, ctx_fq_);
 
   if (is_additive_masking) {
-    for (fq_t& operand_fq : shared_polynomial_fq) {
-      fq_add(polynomial_fq, polynomial_fq, operand_fq, ctx_fq_);
+    for (fmpz_poly_struct& operand_fq : shared_polynomial_fq) {
+      fq_add(&polynomial_fq, &polynomial_fq, &operand_fq, ctx_fq_);
     }
   } else {
-    fq_one(polynomial_fq, ctx_fq_);
-    for (fq_t& operand_fq : shared_polynomial_fq) {
-      fq_mul(polynomial_fq, polynomial_fq, operand_fq, ctx_fq_);
+    fq_one(&polynomial_fq, ctx_fq_);
+    for (fmpz_poly_struct& operand_fq : shared_polynomial_fq) {
+      fq_mul(&polynomial_fq, &polynomial_fq, &operand_fq, ctx_fq_);
     }
   }
 
   ConvertFqToPolynomial(polynomial_fq, polynomial);
-  fq_clear(polynomial_fq, ctx_fq_);
+  fq_clear(&polynomial_fq, ctx_fq_);
   return polynomial;
 }
 
