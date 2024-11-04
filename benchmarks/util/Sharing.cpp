@@ -49,7 +49,7 @@ TEST_CASE("Benchmark the Boolean secret sharing",
       meter.measure([&sharing] {
         sharing.SampleRandomBitslicedPolynomial();
       });
-    };    
+    };
   }
 }
 
@@ -99,6 +99,6 @@ TEST_CASE("Benchmark the secret sharing in Rijndael field",
       meter.measure([&sharing] {
         sharing.SampleRandomBitslicedPolynomial();
       });
-    };    
+    };
   }
 }
