@@ -69,12 +69,12 @@ CXXFLAGS += $(CPPFLAGS) -std=c++20
 C_BENCHMARK_FLAGS = $(CFLAGS) -pedantic -O3 -g -fno-omit-frame-pointer
 C_RELEASE_FLAGS   = $(CFLAGS) -Wno-unused-parameter -Wno-unused-but-set-variable -Wno-deprecated-declarations -O3 -march=native -mtune=native -g0
 C_DEBUG_FLAGS     = $(CFLAGS) -pedantic -g -O2 -fsanitize=address
-C_TEST_FLAGS      = $(CFLAGS) -pedantic -O3 -g -fno-omit-frame-pointer
+C_TEST_FLAGS      = $(CFLAGS) -pedantic -O3 -g -fno-omit-frame-pointer -fsanitize=address
 
 CXX_BENCHMARK_FLAGS = $(CXXFLAGS) -pedantic -O3 -g -fno-omit-frame-pointer
 CXX_RELEASE_FLAGS   = $(CXXFLAGS) -O3 -march=native -mtune=native
 CXX_DEBUG_FLAGS     = $(CXXFLAGS) -pedantic -g -O2 -fsanitize=address
-CXX_TEST_FLAGS      = $(CXXFLAGS) $(INCLUDE_CATCH2) -pedantic -O3 -g -fno-omit-frame-pointer
+CXX_TEST_FLAGS      = $(CXXFLAGS) $(INCLUDE_CATCH2) -pedantic -O3 -g -fno-omit-frame-pointer -fsanitize=address
 
 # Linker options. Add libraries you want to link against here.
 LINK_PYTHON3 ?= $(shell pkg-config --libs python3-embed)
@@ -88,7 +88,7 @@ LDFLAGS += $(LINK_PYTHON3) $(LINK_FLINT) $(LINK_BOOST)
 BENCHMARK_LINK_FLAGS = $(LDFLAGS)
 RELEASE_LINK_FLAGS   = $(LDFLAGS)
 DEBUG_LINK_FLAGS     = $(LDFLAGS) -fsanitize=address
-TEST_LINK_FLAGS      = $(LDFLAGS) $(LINK_CATCH2)
+TEST_LINK_FLAGS      = $(LDFLAGS) -fsanitize=address $(LINK_CATCH2)
 
 # Output file name
 OUTPUT = PROLEAD
