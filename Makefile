@@ -74,7 +74,7 @@ C_TEST_FLAGS      = $(CFLAGS) -Wall -Wextra -Wshadow -pedantic -O3 -g -fno-omit-
 CXX_BENCHMARK_FLAGS = $(CXXFLAGS) -pedantic -O3 -g -fno-omit-frame-pointer
 CXX_RELEASE_FLAGS   = $(CXXFLAGS) -O3 -march=native -mtune=native
 CXX_DEBUG_FLAGS     = $(CXXFLAGS) -pedantic -g -O2 -fsanitize=address
-CXX_TEST_FLAGS      = $(CXXFLAGS) $(INCLUDE_CATCH2) -pedantic -O3 -g -fno-omit-frame-pointer
+CXX_TEST_FLAGS      = $(CXXFLAGS) $(INCLUDE_CATCH2) -pedantic -O3 -g -fno-omit-frame-pointer -fsanitize=address
 
 # Linker options. Add libraries you want to link against here.
 LINK_PYTHON3 ?= $(shell pkg-config --libs python3-embed)
@@ -88,7 +88,7 @@ LDFLAGS += $(LINK_PYTHON3) $(LINK_FLINT) $(LINK_BOOST)
 BENCHMARK_LINK_FLAGS = $(LDFLAGS)
 RELEASE_LINK_FLAGS   = $(LDFLAGS)
 DEBUG_LINK_FLAGS     = $(LDFLAGS) -fsanitize=address
-TEST_LINK_FLAGS      = $(LDFLAGS) $(LINK_CATCH2)
+TEST_LINK_FLAGS      = $(LDFLAGS) -fsanitize=address $(LINK_CATCH2)
 
 # Output file name
 OUTPUT = PROLEAD
