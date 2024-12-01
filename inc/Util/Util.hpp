@@ -442,3 +442,16 @@ void GenerateThreadRng(std::vector<boost::mt19937>&, unsigned int);
 void ExtractCombinationFromBitmask(std::vector<unsigned int>& combination,
                                    std::vector<bool>& bitmask);
 }  // namespace Util
+
+#ifndef NDEBUG
+#   define ASSERT(condition, message) \
+    do { \
+        if (! (condition)) { \
+            std::cerr << "Assertion `" #condition "` failed in " << __FILE__ \
+                      << ":" << __LINE__ << " " << message << std::endl; \
+            std::terminate(); \
+        } \
+    } while (false)
+#else
+#   define ASSERT(condition, message) do { } while (false)
+#endif
