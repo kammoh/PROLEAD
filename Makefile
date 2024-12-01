@@ -39,11 +39,11 @@ EXCLUDED_FILES := test/obj_test/tests/full/aes_rp_d1_ccode/aes_rp_d1_ccode_c.c
 
 # Compiler options
 INCLUDE_PYTHON3 ?= $(shell pkg-config --cflags python3-embed)
-INCLUDE_FLINT ?= $(shell pkg-config --cflags flint)
+INCLUDE_FLINT ?= $(shell pkg-config --cflags flint 2>/dev/null)
 INCLUDE_CATCH2 ?= $(shell pkg-config --cflags catch2-with-main)
 CPPFLAGS += $(INCLUDE_PYTHON3) $(INCLUDE_FLINT)
 
-CPPFLAGS += -Wall -Wextra -Wshadow
+CPPFLAGS += -Wall -Wno-deprecated-declarations
 
 OS=$(shell uname -s)
 
@@ -57,6 +57,7 @@ ifeq ($(OS),Darwin)
 else
 	CPPFLAGS += -fopenmp
 	CPPFLAGS += -ldl
+	LDFLAGS  += -fopenmp
 endif
 
 CPPFLAGS += -I/usr/local/include
@@ -72,13 +73,16 @@ C_DEBUG_FLAGS     = $(CFLAGS) -Wall -Wextra -Wshadow -pedantic -g -O2 -fsanitize
 C_TEST_FLAGS      = $(CFLAGS) -Wall -Wextra -Wshadow -pedantic -O3 -g -fno-omit-frame-pointer
 
 CXX_BENCHMARK_FLAGS = $(CXXFLAGS) -pedantic -O3 -g -fno-omit-frame-pointer
-CXX_RELEASE_FLAGS   = $(CXXFLAGS) -O3 -march=native -mtune=native
-CXX_DEBUG_FLAGS     = $(CXXFLAGS) -pedantic -g -O2 -fsanitize=address
+CXX_RELEASE_FLAGS   = $(CXXFLAGS) -Wno-delete-abstract-non-virtual-dtor -Wno-unused-variable -Wno-unused-parameter -Wno-unused-but-set-variable -O3 -march=native -mtune=native -DNDEBUG
+CXX_DEBUG_FLAGS     = $(CXXFLAGS) -Wextra -pedantic -g -O2 -fno-omit-frame-pointer -fsanitize=bounds,null,address
 CXX_TEST_FLAGS      = $(CXXFLAGS) $(INCLUDE_CATCH2) -pedantic -O3 -g -fno-omit-frame-pointer -fsanitize=address
 
 # Linker options. Add libraries you want to link against here.
 LINK_PYTHON3 ?= $(shell pkg-config --libs python3-embed)
-LINK_FLINT   ?= $(shell pkg-config --libs flint)
+LINK_FLINT   ?= $(shell pkg-config --libs flint 2>/dev/null)
+ifeq ($(LINK_FLINT),)
+   LINK_FLINT=-L/usr/lib64 -lgmp -lflint
+endif
 LINK_CATCH2  ?= $(shell pkg-config --libs catch2-with-main)
 LINK_BOOST   ?= -lboost_filesystem -lboost_program_options
 
@@ -87,7 +91,7 @@ LDFLAGS += $(LINK_PYTHON3) $(LINK_FLINT) $(LINK_BOOST)
 
 BENCHMARK_LINK_FLAGS = $(LDFLAGS)
 RELEASE_LINK_FLAGS   = $(LDFLAGS)
-DEBUG_LINK_FLAGS     = $(LDFLAGS) -fsanitize=address
+DEBUG_LINK_FLAGS     = $(LDFLAGS) -fsanitize=bounds,null,address
 TEST_LINK_FLAGS      = $(LDFLAGS) -fsanitize=address $(LINK_CATCH2)
 
 # Output file name
