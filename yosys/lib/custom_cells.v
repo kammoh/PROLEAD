@@ -54,3 +54,9 @@ always @(posedge C)
 	Q <= D;
 endmodule
 
+module MUX(S, A, B, Q);
+input S, A, B;
+output Q;
+assign Q = (S & A) | (~S & B);
+endmodule
+

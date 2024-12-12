@@ -1,12 +1,15 @@
 // test comment
 /* test comment */
 library(demo) {
+  /*
   cell(BUF) {
     area: 6;
     pin(A) { direction: input; }
     pin(Y) { direction: output;
               function: "A"; }
   }
+  */
+
   cell(NOT) {
     area: 3;
     pin(A) { direction: input; }
@@ -55,6 +58,7 @@ library(demo) {
     pin(Y) { direction: output;
              function: "(A^B)'"; }
   }
+
   cell(DFF) {
     area: 18;
     ff(IQ, IQN) { clocked_on: C;
@@ -65,4 +69,14 @@ library(demo) {
     pin(Q) { direction: output;
               function: "IQ"; }
   }
+
+  cell(MUX) {
+  	area: 8;
+  	pin (S) { direction		: input; }
+  	pin (A) { direction		: input; }
+  	pin (B) { direction		: input; }
+  	pin (Q) { direction		: output;
+  		        function		: "((S & B) | (A & !S))"; }
+  }
+
 }
