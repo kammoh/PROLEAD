@@ -143,7 +143,7 @@
                 {
                     "name": "mux",
                     "aliases": [
-                        "Mux2"
+                        "MUX", "Mux2"
                     ],
                     "type": "gate",
                     "inputs": [
