@@ -1,5 +1,7 @@
 #include "Util/FileParsing.hpp"
 
+#include "iostream"
+
 JsonSchema::JsonSchema(const std::string& key, const std::string& type)
     : key_(key), type_(type) {}
 
@@ -12,6 +14,8 @@ void JsonSchema::Validate(const boost::json::object& json_object) {
   std::string key, type;
   for (const auto& pair : json_object) {
     key = pair.key_c_str();
+
+    std::cout << "Validating key: " << key << std::endl;
 
     assert(std::is_sorted(children_.begin(), children_.end(),
                           [](const JsonSchema& a, const JsonSchema& b) {

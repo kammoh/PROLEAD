@@ -1,0 +1,8 @@
+numpy      ~= 2.2
+matplotlib ~= 3.10
+seaborn
+plotly
+kaleido
+quantiphy  ~= 2.20
+rich       ~= 14.0.0
+click

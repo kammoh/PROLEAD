@@ -84,7 +84,7 @@ ifeq ($(LINK_FLINT),)
    LINK_FLINT=-L/usr/lib64 -lgmp -lflint
 endif
 LINK_CATCH2  ?= $(shell pkg-config --libs catch2-with-main)
-LINK_BOOST   ?= -lboost_filesystem -lboost_program_options
+LINK_BOOST   ?= -lboost_process -lboost_filesystem -lboost_program_options
 
 
 LDFLAGS += $(LINK_PYTHON3) $(LINK_FLINT) $(LINK_BOOST)
