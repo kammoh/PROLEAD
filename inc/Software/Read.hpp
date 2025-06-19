@@ -14,8 +14,13 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/process.hpp>
+#ifdef BOOST_88
 #include <boost/process/v1/system.hpp>
 #include <boost/process/v1/io.hpp>
+#else
+#include <boost/process/system.hpp>
+#include <boost/process/io.hpp>
+#endif
 #include <boost/program_options.hpp>
 
 namespace po = boost::program_options;

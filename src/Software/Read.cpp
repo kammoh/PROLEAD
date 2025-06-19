@@ -1,5 +1,12 @@
 #include "Software/Read.hpp"
 
+
+#ifdef BOOST_88
+namespace process = boost::process::v1;
+#else
+namespace process = boost::process;
+#endif
+
 //***************************************************************************************
 
 // Defining comparator function as per the requirement
@@ -523,7 +530,7 @@ void Software::Read::BinaryFile(const po::variables_map& vm, Software::SettingsS
     	const std::string build_arm_binary = "arm-none-eabi-gcc " + settings.compilerFlags + " -Wl,-T" + vm["linkerfile"].as<std::string>() +
                           " -Wl,-Map," + vm["mapfile"].as<std::string>() + " -o " + vm["binary"].as<std::string>() + " " + design_file_names;
 
-		boost::process::v1::system(build_arm_binary);
+		process::system(build_arm_binary);
 		std::cout << "Successfully created binary file at " << vm["binary"].as<std::string>() << std::endl;
 	}
 
@@ -531,7 +538,7 @@ void Software::Read::BinaryFile(const po::variables_map& vm, Software::SettingsS
 		std::cout << "Assembly file already exists at: " << vm["asmfile"].as<std::string>() << std::endl;
 	} else {
 		const std::string create_asm = "arm-none-eabi-objdump " + vm["binary"].as<std::string>() + " -d"; 
-		boost::process::v1::system(create_asm, boost::process::v1::std_out > vm["asmfile"].as<std::string>());
+		process::system(create_asm, process::std_out > vm["asmfile"].as<std::string>());
 		std::cout << "Successfully created assmebly file at " << vm["asmfile"].as<std::string>() << std::endl;
 	}
 
