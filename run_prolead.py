@@ -20,7 +20,6 @@ from rich.console import Console
 from rich.table import Table
 from rich.live import Live
 
-from plotly import express as px
 
 SCRIPT_DIR = Path(__file__).parent.resolve()
 
@@ -260,7 +259,7 @@ def synthesize(
         # "async2sync -nolower",
         f"synth {' '.join(synth_args)}",
         "opt_clean -purge",
-        # f"log -stdout *** Synthesis completed. Writing netlist to {post_synth_netlist}",
+        f"log -stdout *** Synthesis completed.",
         # f"write_verilog -noattr {post_synth_netlist}",
         # "opt_clean -purge",
     ]
@@ -292,6 +291,7 @@ def synthesize(
         "opt_clean -purge",
         # "write_verilog pre_abc_dump.v",
         # f"dfflibmap -prepare -liberty {liberty_lib}",
+        "log -stdout *** Running DFF library mapping",
         f"dfflibmap -liberty {liberty_lib}",
         "opt_clean -purge",
         "log -stdout *** Running ABC",
@@ -722,55 +722,7 @@ def run_prolead(
     ## https://github.com/ChairImpSec/PROLEAD/wiki/Results
 
     if data_np is not None:
-        sns.set_theme(style="whitegrid", context="paper")
-        plt.figure()
-
-        x = data_np[:, 0]
-        y = data_np[:, 1]  # The smallest p-value from the g-test in logarithmic form
-
-        num_sims = np.max(x)
-        max_p_log = np.max(y)
-
-        if num_sims >= 1e10:
-            x_scale = 1e9
-        elif num_sims >= 1e7:
-            x_scale = 1e6
-        elif num_sims >= 1e4:
-            x_scale = 1e3
-        else:
-            x_scale = 1
-
-        if x_scale > 1:
-            x = x / x_scale
-
-        plot = sns.lineplot(
-            x=x,
-            y=y,
-            # kind="line",
-            label=r"$-\log_{10}(p)$"
-            + " [glitch"
-            + (
-                "+?"
-                if sca_config is None
-                else "+transition" if sca_config.get("transitional_leakage") else ""
-            )
-            + "]",
-        )
-        plot.axhline(y=max_p_log, linestyle="--", label="Minimum p-value", alpha=0.6)
-        plot.axhline(y=5, color="r", linestyle="--", label="Threshold")
-        plot.set_xlabel(
-            "Number of Simulations" + (rf" ($\times${int(x_scale):,})" if x_scale > 1 else "")
-        )
-        plot.set_ylabel(r"$-\log_{10}(p)$")
-        plot.legend(loc="best", fancybox=True, framealpha=0.9)
-        plt.tight_layout()
-
-        fig_file = npy_file.with_suffix(".png")
-
-        print(f"Saving plot to {fig_file}")
-        plt.savefig(fig_file, dpi=600)
-        if show_figure:
-            plt.show()
+        plot_data(data_np, sca_config, show_figure=show_figure)
 
     if not terminated and proc.returncode:
         print(f"PROLEAD failed with return code {proc.returncode}")
@@ -990,6 +942,78 @@ def generate_config(
         f.write(json.dumps(config, indent=2))
 
 
+def plot_data(
+    data_np: np.ndarray, sca_config, plot_title: str | None = None, show_figure: bool = False
+):
+    sns.set_theme(style="whitegrid", context="paper")
+    x = data_np[:, 0]
+    y = data_np[:, 1]  # The smallest p-value from the g-test in logarithmic form
+
+    num_sims = np.max(x)
+    # print(f"Number of simulations: {num_sims}")
+    max_p_log = np.max(y)
+
+    if num_sims >= 1e10:
+        x_scale = 1e9
+    elif num_sims >= 1e7:
+        x_scale = 1e6
+    elif num_sims >= 1e4:
+        x_scale = 1e3
+    else:
+        x_scale = 1
+
+    if x_scale > 1:
+        x = x / x_scale
+
+    plot = sns.lineplot(
+        x=x,
+        y=y,
+        # kind="line",
+        label=r"$-\log_{10}(p)$"
+        + " [glitch"
+        + (
+            "+?"
+            if sca_config is None
+            else "+transition" if sca_config.get("transitional_leakage") else ""
+        )
+        + "]",
+        linewidth=1.0,
+    )
+
+    # plot_label = r"$-\log_{10}(p)$"
+    if plot_title:
+        plot.set_title(plot_title)
+    plot.axhline(
+        y=max_p_log,
+        linestyle="--",
+        label="Minimum p-value",
+        alpha=0.6,
+        linewidth=0.9,
+    )
+    plot.axhline(
+        y=5,
+        color="r",
+        linestyle="--",
+        label="Threshold",
+        alpha=0.9,
+        linewidth=0.9,
+    )
+    plot.set_xlabel(
+        "Number of Simulations" + (rf" ($\times${int(x_scale):,})" if x_scale > 1 else "")
+    )
+    plot.set_xlim(left=0, right=np.max(x) + 1)
+    plot.set_ylabel(r"$-\log_{10}(p)$")
+    plot.legend(loc="best", fancybox=True, framealpha=0.9)
+    plt.tight_layout()
+
+    fig_file = npy_file.with_suffix(".png")
+
+    print(f"Saving plot to {fig_file}")
+    plt.savefig(fig_file, dpi=600)
+    if show_figure:
+        plt.show()
+
+
 if __name__ == "__main__":
     args = argparser.parse_args()
     if args.plot_npz:
@@ -1001,80 +1025,20 @@ if __name__ == "__main__":
         print(f"Available keys in {npy_file}: {list(data.keys())}")
         data_np = data.get("arr_0", None)
 
-        if data_np is not None:
-            x = data_np[:, 0]
-            y = data_np[:, 1]  # The smallest p-value from the g-test in logarithmic form
-
-            num_sims = np.max(x)
-            max_p_log = np.max(y)
-
-            if num_sims >= 1e10:
-                x_scale = 1e9
-            elif num_sims >= 1e7:
-                x_scale = 1e6
-            elif num_sims >= 1e4:
-                x_scale = 1e3
-            else:
-                x_scale = 1
-
-            if x_scale > 1:
-                x = x / x_scale
-
-            plot_label = r"$-\log_{10}(p)$"
-            # plot = sns.lineplot(
-            #     x=x,
-            #     y=y,
-            #     # kind="line",
-            #     label=r"$-\log_{10}(p)$",
-            # )
-            # plot using plotly
-            import plotly.graph_objects as go
-
-            fig = go.Figure()
-            fig.add_trace(
-                go.Scatter(
-                    x=x,
-                    y=y,
-                    mode="lines",
-                    name=plot_label,
-                )
-            )
-            fig.add_hline(
-                y=max_p_log,
-                line_dash="dash",
-                line_color="blue",
-                opacity=0.6,
-                name="Minimum p-value",
-            )
-            fig.add_hline(y=5, line_dash="dash", line_color="red", name="Threshold")
-            fig.update_layout(
-                title="PROLEAD SCA Results",
-                xaxis_title="Number of Simulations"
-                + (rf" ($\times${int(x_scale):,})" if x_scale > 1 else ""),
-                yaxis_title=r"$-\log_{10}(p)$",
-                legend=dict(
-                    title="Legend",
-                    orientation="h",
-                    yanchor="bottom",
-                    y=1.02,
-                    xanchor="right",
-                    x=1,
-                ),
-            )
-
-            fig.update_xaxes(tickvals=np.arange(0, np.max(x) + 1, 1))
-            fig.update_yaxes(tickvals=np.arange(0, np.max(y) + 1, 1))
-
-            fig_html = npy_file.with_suffix(".html")
-            print(f"Saving plot to {fig_html}")
-            fig.write_html(fig_html, include_plotlyjs="cdn", full_html=True)
-
-            # fig_file = npy_file.with_suffix(".png")
-            # print(f"Saving plot to {fig_file}")
-            # fig.write_image(fig_file, scale=1, width=1200, height=600)
-            # fig.show()
+        if args.prolead_config:
+            config_file = Path(args.prolead_config)
+            with open(config_file, "r") as f:
+                config = json.load(f)
+                sca_config = config.get("side_channel_analysis", {})
         else:
-            print(f"No data found in {npy_file}")
+            sca_config = None
+
+        assert data_np is not None, f"Failed to load data from {npy_file}"
+        if args.top_module:
+            plot_title: str | None = f"PROLEAD p-values for {args.top_module}"
+        else:
+            plot_title = None
+        plot_data(data_np, sca_config, plot_title=plot_title, show_figure=args.show_figure)
         exit(0)
 
     if not args.source_files and not args.sources_list:
@@ -1332,7 +1296,13 @@ if __name__ == "__main__":
             f"** Using existing config file: {args.prolead_config}. All other prolead configuration arguments are ignored!"
         )
         config_file = Path(args.prolead_config)
-        sca_config = None
+        # sca_config = None
+        # read from config_file json
+        with open(config_file, "r") as f:
+            config = json.load(f)
+            sca_config = config.get("side_channel_analysis", {})
+            sim_config = config.get("simulation", {})
+            perf_config = config.get("performance", {})
     else:
         random_seed = (
             args.random_seed if args.random_seed is not None else random.randint(0, 2**64 - 1)
@@ -1352,7 +1322,7 @@ if __name__ == "__main__":
             "number_of_simulations_per_step": number_of_simulations_per_step,
             # "end_wait_cycles": 0,
             "number_of_clock_cycles": args.sim_cycles,
-            "number_of_simulations_per_write": 1024 * number_of_simulations_per_step,
+            "number_of_simulations_per_write": 64 * number_of_simulations_per_step,
         }
 
         perf_config = {
