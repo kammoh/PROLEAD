@@ -41,6 +41,7 @@ argparser.add_argument(
 )
 argparser.add_argument("--netlist", type=Path, help="Netlist file")
 argparser.add_argument("-t", "--top-module", default=None, help="Top module")
+argparser.add_argument("--run-dir", type=Path, default=Path("prolead_run"), help="Run directory")
 argparser.add_argument("--force-synth", help="Force synthesis.", action="store_true")
 argparser.add_argument(
     "--quiet-synth",
@@ -583,6 +584,8 @@ def run_prolead(
         if data_np is not None:
             np.savez_compressed(npy_file, data_np)
 
+    fig_file = npy_file.with_suffix(".png")
+
     table = Table() if pretty else None
 
     leaking_signals = set()
@@ -722,7 +725,7 @@ def run_prolead(
     ## https://github.com/ChairImpSec/PROLEAD/wiki/Results
 
     if data_np is not None:
-        plot_data(data_np, sca_config, show_figure=show_figure)
+        plot_data(data_np, sca_config, fig_file=fig_file, show_figure=show_figure)
 
     if not terminated and proc.returncode:
         print(f"PROLEAD failed with return code {proc.returncode}")
@@ -943,7 +946,11 @@ def generate_config(
 
 
 def plot_data(
-    data_np: np.ndarray, sca_config, plot_title: str | None = None, show_figure: bool = False
+    data_np: np.ndarray,
+    sca_config,
+    fig_file: Path,
+    plot_title: str | None = None,
+    show_figure: bool = False,
 ):
     sns.set_theme(style="whitegrid", context="paper")
     x = data_np[:, 0]
@@ -1006,8 +1013,6 @@ def plot_data(
     plot.legend(loc="best", fancybox=True, framealpha=0.9)
     plt.tight_layout()
 
-    fig_file = npy_file.with_suffix(".png")
-
     print(f"Saving plot to {fig_file}")
     plt.savefig(fig_file, dpi=600)
     if show_figure:
@@ -1038,7 +1043,15 @@ if __name__ == "__main__":
             plot_title: str | None = f"PROLEAD p-values for {args.top_module}"
         else:
             plot_title = None
-        plot_data(data_np, sca_config, plot_title=plot_title, show_figure=args.show_figure)
+
+        fig_file = npy_file.with_suffix(".png")
+        plot_data(
+            data_np,
+            sca_config,
+            fig_file=fig_file,
+            plot_title=plot_title,
+            show_figure=args.show_figure,
+        )
         exit(0)
 
     if not args.source_files and not args.sources_list:
@@ -1090,7 +1103,7 @@ if __name__ == "__main__":
         assert liberty_lib, f"Liberty library not specified"
         assert liberty_lib.exists(), f"Liberty library {liberty_lib} does not exist"
 
-    prolead_run_dir: Path = Path("prolead_run") / (args.top_module or "top")
+    prolead_run_dir: Path = args.run_dir / (args.top_module or "top")
 
     if not prolead_run_dir.exists():
         prolead_run_dir.mkdir(parents=True)
