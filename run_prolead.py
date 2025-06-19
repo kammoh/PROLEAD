@@ -8,8 +8,7 @@ import random
 import re
 import shutil
 import subprocess
-import time
-from typing import Literal, Optional, OrderedDict, Sequence, Union
+from typing import Optional, OrderedDict, Sequence, Union
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -31,7 +30,7 @@ console = Console()
 
 argparser = argparse.ArgumentParser(description="Run PROLEAD")
 
-argparser.add_argument("source_files", nargs="*", default=[], type=Path, help="Source files")
+argparser.add_argument("--source-files", nargs="*", default=None, type=Path, help="Source files")
 argparser.add_argument(
     "--sources-list", default=None, type=Path, help="File containing list of source files"
 )
@@ -93,7 +92,7 @@ argparser.add_argument(
     help="Path to json file containing port information",
 )
 argparser.add_argument(
-    "--opt",
+    "--synth-opt",
     help="Run optimizations during synthesis",
     default="none",
     choices=["full", "flatten", "none"],
@@ -106,7 +105,7 @@ argparser.add_argument(
 argparser.add_argument(
     "--minimize-probing-sets",
     choices=["trivial", "aggressive", "no"],
-    default="trivial",
+    default="aggressive",
     help="Minimize probing sets",
 )
 argparser.add_argument(
@@ -225,64 +224,83 @@ def synthesize(
             hierarchy_args += ["-chparam", k, str(v)]
 
     yosys_script += [
+        f"read_liberty -lib {liberty_lib}",
         "hierarchy " + " ".join(hierarchy_args),
         "proc",
-        "async2sync",
-        "opt_clean -purge",
+        # "async2sync",
+        # "opt_clean -purge",
         "check -assert",
-        "log -stdout *** Deisgn was successfully parsed",
     ]
+
+    if opt_flatten:
+        yosys_script.append("flatten")
+        yosys_script.append("opt_clean -purge")
 
     rtl_dump = netlist_dir / "yosys_rtl.v"
 
     yosys_script += [
-        f"write_verilog -noattr {rtl_dump}",
-        f"log -stdout *** RTL dumped to {rtl_dump}",
-        f"write_json {netlist_dir / 'yosys_rtl.json'}",
+        # f"write_verilog -noattr {rtl_dump}",
+        # f"log -stdout *** Elaborated RTL dumped to {rtl_dump}",
+        # f"write_json {netlist_dir / 'yosys_rtl.json'}",
     ]
     yosys_script += []
     synth_args = [
-        # "-noabc",
-        # "-noshare",
+        "-noabc",
+        "-noshare",
+        # "-booth",
         # "-nordff",
     ]
-
-    if opt_flatten:
-        synth_args.append("-flatten")
+    # if opt_flatten:
+    #     synth_args.append("-flatten")
+    # post_synth_netlist = rtl_dump.with_stem("post_synth")
     yosys_script += [
         # "setattr -set keep_hierarchy 1",
         # f"read_verilog -lib {verilog_lib}",
-        f"read_liberty -lib {liberty_lib}",
+        "log -stdout *** Starting synthesis",
+        # "async2sync -nolower",
         f"synth {' '.join(synth_args)}",
         "opt_clean -purge",
+        # f"log -stdout *** Synthesis completed. Writing netlist to {post_synth_netlist}",
+        # f"write_verilog -noattr {post_synth_netlist}",
+        # "opt_clean -purge",
     ]
-    if opt_full:
-        yosys_script.append("opt -full -purge")
-    else:
-        yosys_script.append("opt_clean -purge")
+    # if opt_full:
+    #     yosys_script.append("opt -full -purge")
+    # else:
+    #     yosys_script.append("opt_clean -purge")
 
-    abc_flags = ["-liberty", liberty_lib]
+    abc_flags = [f"-liberty {liberty_lib}"]
 
     # if opt_full:
     #     abc_flags += ["-dff"]
     # else:
     #     abc_flags += ["-keepff", "-fast"]
-    # abc_flags += ["-fast"]
-    # abc_flags += ["-script", "+strash;&ifraig,-x;scorr;dc2;strash;&get,-n;&dch,-f;&nf,{D};&put"]
+    # abc_flags += ["-dff"]
+    # abc_flags += ["-dress"]
     abc_flags += [
         "-script",
-        "+strash;map,{D}",
+        "+strash;&get -n; &fraig -x; &put; scorr; dc2; strash; &get -n; &dch -f; &nf; &put".replace(
+            " ", ","
+        ),
     ]
+    # abc_flags += [
+    #     "-script",
+    #     "+strash;map,{D}",
+    # ]
 
     yosys_script += [
-        "write_verilog pre_abc_dump.v",
-        # "async2sync -nolower",
-        f"dfflibmap -prepare -liberty {liberty_lib}",
         "opt_clean -purge",
-        f"abc " + " ".join(str(e) for e in abc_flags),
-        "opt_clean -purge",
+        # "write_verilog pre_abc_dump.v",
+        # f"dfflibmap -prepare -liberty {liberty_lib}",
         f"dfflibmap -liberty {liberty_lib}",
         "opt_clean -purge",
+        "log -stdout *** Running ABC",
+        f"abc " + " ".join(str(e) for e in abc_flags),
+        "opt_clean -purge",
+        # "log -stdout *** Running DFF library mapping",
+        # f"dfflibmap -liberty {liberty_lib}",
+        "opt_clean -purge",
+        "check -mapped -assert",
     ]
 
     if opt_full:
@@ -296,11 +314,11 @@ def synthesize(
     yosys_script += [
         "setundef -zero",
         "opt -full -purge" if opt_full else "opt_clean -purge",
-        "setattr -set keep_hierarchy 0",
-        "opt_clean -purge",
+        # "setattr -set keep_hierarchy 0",
+        "opt -purge",
         "flatten",
-        "opt_clean -purge",
-        # "check -assert -noinit -mapped",
+        "opt -purge",
+        "check -assert -noinit -mapped",
     ]
 
     if opt_full:
@@ -313,9 +331,11 @@ def synthesize(
     else:
         yosys_script.append("opt_clean -purge")
 
+    # yosys_script += ["rename -src"]
+    split_nets = True
     if split_nets:
-        yosys_script += ["splitnets -driver -format ___"]
-        # yosys_script += ["splitnets -driver"]
+        # yosys_script += ["splitnets -driver -format ___"]
+        yosys_script += ["splitnets -driver"]
 
     # if top_module:
     #     yosys_script.append(f"select {top_module}")
@@ -338,8 +358,8 @@ def synthesize(
         f"write_json {json_netlist}",
         # "check -assert -noinit -initdrv",
         f"stat -liberty {liberty_lib}",
-        "check -mapped -noinit -initdrv",
-        "check -assert -noinit -initdrv",
+        # "check -mapped -noinit -initdrv",
+        "check -assert -mapped -noinit -initdrv",
         f"write_verilog {' '.join(write_verilog_args)}",
     ]
     yosys_cmd = [yosys_bin, "-Q", "-T"]
@@ -422,7 +442,7 @@ class Port:
 
     @property
     def value_str(self):
-        if self.value == "fixed":
+        if self.value in {"fixed", "constant"}:
             self.value = random.randint(0, self.num_bits - 1)
         elif isinstance(self.value, str) and self.value.isnumeric():
             self.value = int(self.value)
@@ -876,12 +896,10 @@ def generate_config(
 
     start_bits = {}
 
-    end_condition = {}
+    end_condition = []
 
-    if end_cycles:
-        end_condition["clock_cycles"] = end_cycles
     if end_signals:
-        end_condition["signals"] = [
+        end_condition += [
             {
                 "name": p.name_bits,  ## FIXME??? p.name?
                 "value": (
@@ -942,7 +960,7 @@ def generate_config(
             if isinstance(reset_signal.value, int)
             else 1 if reset_signal.value in ("1'b0", "1'h0", "0") else 0
         )
-        print(f"** Reset signal: {reset_signal.name} = {reset_signal.value} -> {not_reset}")
+        print(f"** Reset signal: {reset_signal.name}, active value: {reset_signal.value}")
         input_sequence += [
             {
                 "signals": [
@@ -1011,6 +1029,7 @@ if __name__ == "__main__":
             # )
             # plot using plotly
             import plotly.graph_objects as go
+
             fig = go.Figure()
             fig.add_trace(
                 go.Scatter(
@@ -1019,9 +1038,14 @@ if __name__ == "__main__":
                     mode="lines",
                     name=plot_label,
                 )
-
             )
-            fig.add_hline(y=max_p_log, line_dash="dash", line_color="blue", opacity=0.6, name="Minimum p-value")
+            fig.add_hline(
+                y=max_p_log,
+                line_dash="dash",
+                line_color="blue",
+                opacity=0.6,
+                name="Minimum p-value",
+            )
             fig.add_hline(y=5, line_dash="dash", line_color="red", name="Threshold")
             fig.update_layout(
                 title="PROLEAD SCA Results",
@@ -1037,10 +1061,9 @@ if __name__ == "__main__":
                     x=1,
                 ),
             )
-            
+
             fig.update_xaxes(tickvals=np.arange(0, np.max(x) + 1, 1))
             fig.update_yaxes(tickvals=np.arange(0, np.max(y) + 1, 1))
-            
 
             fig_html = npy_file.with_suffix(".html")
             print(f"Saving plot to {fig_html}")
@@ -1154,9 +1177,9 @@ if __name__ == "__main__":
             verilog_lib=verilog_lib,
             liberty_lib=liberty_lib,
             verilog_netlist=netlist_file,
-            opt_flatten=args.opt == "flatten" or args.opt == "full",
-            opt_full=args.opt == "full",
-            split_nets=True,
+            opt_flatten=args.synth_opt == "flatten" or args.synth_opt == "full",
+            opt_full=args.synth_opt == "full",
+            split_nets=False,
             quiet=args.quiet_synth,
         )
     else:
