@@ -48,16 +48,24 @@ CPPFLAGS += -Wall -Wno-deprecated-declarations
 OS=$(shell uname -s)
 
 ifeq ($(OS),Darwin)
-	CPPFLAGS += -I$(HOMEBREW_PREFIX)/include
-	CPPFLAGS += -I$(HOMEBREW_PREFIX)/opt/libomp/include
-	LDFLAGS  += -L${HOMEBREW_PREFIX}/lib
-	LDFLAGS  += -L${HOMEBREW_PREFIX}/opt/libomp/lib
-	LDFLAGS  += -lomp
-	CPPFLAGS += -Xclang -fopenmp
+  CPPFLAGS += -I$(HOMEBREW_PREFIX)/include
+  CPPFLAGS += -I$(HOMEBREW_PREFIX)/opt/libomp/include
+  LDFLAGS  += -L${HOMEBREW_PREFIX}/lib
+  LDFLAGS  += -L${HOMEBREW_PREFIX}/opt/libomp/lib
+  LDFLAGS  += -lomp
+  CPPFLAGS += -Xclang -fopenmp
+  ifeq ($(BOOST_GE_188),)
+     BOOST_GE_188=1
+  endif
 else
-	CPPFLAGS += -fopenmp
-	CPPFLAGS += -ldl
-	LDFLAGS  += -fopenmp
+  CPPFLAGS += -fopenmp
+  CPPFLAGS += -ldl
+  LDFLAGS  += -fopenmp
+  BOOST_GE_188?=0
+endif
+
+ifeq ($(BOOST_GE_188),1)
+  CPPFLAGS += -DBOOST_88=1
 endif
 
 CPPFLAGS += -I/usr/local/include
@@ -65,6 +73,7 @@ LDFLAGS  += -L/usr/local/lib
 
 CFLAGS   += $(CPPFLAGS) -std=c11
 CXXFLAGS += $(CPPFLAGS) -std=c++20
+
 
 
 C_BENCHMARK_FLAGS = $(CFLAGS) -Wall -Wextra -Wshadow -pedantic -O3 -g -fno-omit-frame-pointer
@@ -85,7 +94,9 @@ ifeq ($(LINK_FLINT),)
 endif
 LINK_CATCH2  ?= $(shell pkg-config --libs catch2-with-main)
 LINK_BOOST   ?= -lboost_filesystem -lboost_program_options
-#LINK_BOOST   += -lboost_process
+ifeq ($(BOOST_GE_188),1)
+	LINK_BOOST+=-lboost_process
+endif
 
 
 LDFLAGS += $(LINK_PYTHON3) $(LINK_FLINT) $(LINK_BOOST)
