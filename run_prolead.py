@@ -1136,6 +1136,9 @@ if __name__ == "__main__":
     if not yosys_run_dir.exists():
         yosys_run_dir.mkdir(parents=True)
 
+    if args.source_files is None:
+        args.source_files = []
+
     for f in args.source_files:
         assert isinstance(f, Path), f"Expected Path, got {f}"
         assert f.exists(), f"File {f} does not exist"
