@@ -139,6 +139,11 @@ argparser.add_argument(
     default=None,
     help="Path to PROLEAD config file. All other PROLEAD options will be ignored.",
 )
+argparser.add_argument(
+    "--no-run",
+    action="store_true",
+    help="Only generate the config file and netlist, do not run PROLEAD",
+)
 
 
 def synthesize(
@@ -1067,8 +1072,12 @@ if __name__ == "__main__":
             exit(1)
 
     if args.sources_list:
+        parent_dir = Path(args.sources_list).parent
         with open(args.sources_list, "r") as f:
-            args.source_files = [Path(l.strip()) for l in f]
+            source_files = [l.strip() for l in f]
+            args.source_files = [
+                Path(p) if os.path.isabs(p) else parent_dir / p for p in source_files
+            ]
 
     prolead_root_dir = args.prolead_root_dir or os.environ.get("PROLEAD_ROOT_DIR")
 
@@ -1368,16 +1377,17 @@ if __name__ == "__main__":
 
         generate_config(config_file, ports, sca_config, sim_config, perf_config)
 
-    run_prolead(
-        args.prolead_bin,
-        prolead_run_dir,
-        netlist_file,
-        args.top_module,
-        library_name=args.library_name,
-        library_json=library_json,
-        sca_config=sca_config,
-        config_file=config_file,
-        show_figure=args.show_figure,
-        result_folder="results",
-        pretty=args.pretty,
-    )
+    if not args.no_run:
+        run_prolead(
+            args.prolead_bin,
+            prolead_run_dir,
+            netlist_file,
+            args.top_module,
+            library_name=args.library_name,
+            library_json=library_json,
+            sca_config=sca_config,
+            config_file=config_file,
+            show_figure=args.show_figure,
+            result_folder="results",
+            pretty=args.pretty,
+        )
