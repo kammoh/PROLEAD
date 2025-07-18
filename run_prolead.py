@@ -64,7 +64,7 @@ argparser.add_argument("--library-name", help="Library name", type=str, default=
 argparser.add_argument("--random-seed", default=None, type=int, help="Random seed")
 argparser.add_argument("-d", "--order", default=1, type=int, help="SCA order")
 argparser.add_argument(
-    "-N", "--num-simulations", default=Quantity("10 M"), type=Quantity, help="Number of simulations"
+    "-N", "--num-simulations", default=Quantity("100 M"), type=Quantity, help="Number of simulations"
 )
 argparser.add_argument(
     "-c", "--sim-cycles", type=int, default=None, help="Number of simulation cycles"
@@ -218,22 +218,24 @@ def synthesize(
             f"ghdl {' '.join(ghdl_args)} {' '.join(map(str, vhdl_files))} -e",
         ]
 
-    hierarchy_args = ["-check"]
+    prep_args = []
     if top_module:
-        hierarchy_args += ["-top", top_module]
+        prep_args += ["-top", top_module]
     else:
-        hierarchy_args.append("-auto-top")
+        prep_args.append("-auto-top")
 
     if parameters is not None:
         for k, v in parameters.items():
-            hierarchy_args += ["-chparam", k, str(v)]
+            prep_args += ["-chparam", k, str(v)]
 
     yosys_script += [
         f"read_liberty -lib {liberty_lib}",
-        "hierarchy " + " ".join(hierarchy_args),
-        "proc",
-        # "async2sync",
-        # "opt_clean -purge",
+        # "hierarchy " + " ".join(hierarchy_args),
+        # "proc",
+        "prep " + " ".join(prep_args),
+        "async2sync",
+        "memory_map",
+        "opt_clean -purge",
         "check -assert",
     ]
 
@@ -274,6 +276,11 @@ def synthesize(
     # else:
     #     yosys_script.append("opt_clean -purge")
 
+    yosys_script += ["splitnets -driver", "opt_clean -purge"]
+
+    yosys_script += ["insbuf"]
+    # yosys_script += ["splitnets", "opt_clean -purge"]
+
     abc_flags = [f"-liberty {liberty_lib}"]
 
     # if opt_full:
@@ -308,6 +315,8 @@ def synthesize(
         "opt_clean -purge",
         "check -mapped -assert",
     ]
+
+    yosys_script += ["insbuf"]
 
     if opt_full:
         yosys_script += [
@@ -1072,12 +1081,33 @@ if __name__ == "__main__":
             exit(1)
 
     if args.sources_list:
-        parent_dir = Path(args.sources_list).parent
-        with open(args.sources_list, "r") as f:
-            source_files = [l.strip() for l in f]
-            args.source_files = [
-                Path(p) if os.path.isabs(p) else parent_dir / p for p in source_files
-            ]
+        sources_list = Path(args.sources_list)
+        parent_dir = sources_list.parent
+        top = None
+        if sources_list.suffix == ".f":
+            with open(sources_list, "r") as f:
+                source_files = [l.strip() for l in f]
+        elif sources_list.suffix == ".json":
+            with open(sources_list, "r") as f:
+                data = json.load(f)
+                rtl = data.get("rtl", None)
+                if rtl:
+                    data = rtl
+                source_files = data.get("sources", [])
+                top = data.get("top", None)
+        else:
+            print(f"Unsupported sources list format: {sources_list.suffix}")
+            exit(1)
+        # elif sources_list.suffix == ".yaml":
+        #     with open(sources_list, "r") as f:
+        #         data = yaml.safe_load(f)
+        #         source_files = data.get("sources", [])
+        #         top = data.get("top", None)
+        args.source_files = [Path(p) if os.path.isabs(p) else parent_dir / p for p in source_files]
+        print(f"Source files: {', '.join(str(f) for f in args.source_files)}")
+        if top:
+            print(f"** top module set to `{top}'")
+            args.top_module = top
 
     prolead_root_dir = args.prolead_root_dir or os.environ.get("PROLEAD_ROOT_DIR")
 
