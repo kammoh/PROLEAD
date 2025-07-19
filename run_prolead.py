@@ -64,7 +64,11 @@ argparser.add_argument("--library-name", help="Library name", type=str, default=
 argparser.add_argument("--random-seed", default=None, type=int, help="Random seed")
 argparser.add_argument("-d", "--order", default=1, type=int, help="SCA order")
 argparser.add_argument(
-    "-N", "--num-simulations", default=Quantity("100 M"), type=Quantity, help="Number of simulations"
+    "-N",
+    "--num-simulations",
+    default=Quantity("100 M"),
+    type=Quantity,
+    help="Number of simulations",
 )
 argparser.add_argument(
     "-c", "--sim-cycles", type=int, default=None, help="Number of simulation cycles"
@@ -1172,20 +1176,21 @@ if __name__ == "__main__":
         netlist_file = None
 
         if args.top_module:
+            netlist_file = prolead_run_dir / f"{args.top_module}_netlist.v"
+        else:
             netlist_file = prolead_run_dir / "netlist.v"
 
         run_synth = args.force_synth
 
-        if not run_synth:
-            # Check if the netlist file exists
-            if not netlist_file or not netlist_file.exists():
+    if not run_synth:
+        # Check if the netlist file exists
+        if not netlist_file or not netlist_file.exists():
+            run_synth = True
+        elif args.source_files:
+            # check if modification time of the netlist file is older than the source files
+            netlist_mtime = netlist_file.stat().st_mtime
+            if any(netlist_mtime < Path(f).stat().st_mtime for f in args.source_files):
                 run_synth = True
-            else:
-                # check if modification time of the netlist file is older than the source files
-                netlist_mtime = netlist_file.stat().st_mtime
-                if any(netlist_mtime < Path(f).stat().st_mtime for f in args.source_files):
-                    run_synth = True
-        netlist_file = prolead_run_dir / "netlist.v"
 
     if run_synth:
         synthesize(
